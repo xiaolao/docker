@@ -1,0 +1,43 @@
+version: '2'
+
+services:
+    zookeeper:
+      image: confluent/zookeeper
+      ports:
+        - "2181:2181"
+
+    kafka:
+      image: wurstmeister/kafka
+      ports:
+        - "9092:9092"
+      links:
+        - zookeeper:zk
+      environment:
+        KAFKA_ADVERTISED_HOST_NAME: ${HOST_IP}
+        KAFKA_ADVERTISED_PORT: 9092
+        KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+        KAFKA_DELETE_TOPIC_ENABLE: "true"
+        KAFKA_JMX_PORT: 9091
+
+    kafka_manager:
+      image: hlebalbau/kafka-manager:stable
+      ports:
+        - "9000:9000"
+      links:
+        - zookeeper
+        - kafka
+      environment:
+        ZK_HOSTS: zookeeper:2181
+        APPLICATION_SECRET: "random-secret"
+      command: -Dpidfile.path=/dev/null
+
+    zkui:
+      image: oxnme/zkui
+      ports:
+        - 9090:9090
+      links:
+        - zookeeper
+        - kafka
+      environment:
+        ZK_SERVER: zookeeper:2181
+
